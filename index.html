@@ -35,15 +35,15 @@
             text-align: center;
         }
 
-            .header h1 {
-                font-size: 22px;
-                margin-bottom: 5px;
-            }
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
 
-            .header p {
-                opacity: 0.9;
-                font-size: 13px;
-            }
+        .header p {
+            opacity: 0.9;
+            font-size: 13px;
+        }
 
         .settings {
             padding: 20px;
@@ -70,11 +70,11 @@
             height: 26px;
         }
 
-            .toggle-switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
         .slider {
             position: absolute;
@@ -88,25 +88,25 @@
             border-radius: 34px;
         }
 
-            .slider:before {
-                position: absolute;
-                content: "";
-                height: 18px;
-                width: 18px;
-                left: 4px;
-                bottom: 4px;
-                background-color: white;
-                transition: .4s;
-                border-radius: 50%;
-            }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
 
         input:checked + .slider {
             background-color: #667eea;
         }
 
-            input:checked + .slider:before {
-                transform: translateX(24px);
-            }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
 
         .scanner-container {
             padding: 20px;
@@ -114,40 +114,62 @@
 
         #scanner {
             width: 100%;
+            height: 400px;
             border-radius: 15px;
             overflow: hidden;
             background: #000;
             margin-bottom: 15px;
             position: relative;
-            min-height: 300px;
         }
 
-            #scanner video {
-                width: 100%;
-                height: auto;
-            }
+        #scanner video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #scanner canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
 
         .scanner-overlay {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 80%;
-            height: 40%;
-            border: 3px solid #00ff00;
-            border-radius: 10px;
+            width: 70%;
+            height: 30%;
+            border: 4px solid #00ff00;
+            border-radius: 12px;
             box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
             animation: pulse 2s infinite;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .scanner-overlay::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #00ff00;
+            animation: scan 2s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+            0%, 100% { transform: translateY(-100%); }
+            50% { transform: translateY(100%); }
         }
 
         @keyframes pulse {
-            0%, 100% {
-                border-color: #00ff00;
-            }
-
-            50% {
-                border-color: #00cc00;
-            }
+            0%, 100% { border-color: #00ff00; }
+            50% { border-color: #00cc00; }
         }
 
         .controls {
@@ -172,10 +194,10 @@
             color: white;
         }
 
-            .btn-primary:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
 
         .btn:disabled {
             opacity: 0.5;
@@ -220,23 +242,23 @@
             display: none;
         }
 
-            .status.success {
-                background: #d4edda;
-                color: #155724;
-                border: 2px solid #c3e6cb;
-            }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
 
-            .status.error {
-                background: #f8d7da;
-                color: #721c24;
-                border: 2px solid #f5c6cb;
-            }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
 
-            .status.loading {
-                background: #d1ecf1;
-                color: #0c5460;
-                border: 2px solid #bee5eb;
-            }
+        .status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #bee5eb;
+        }
 
         .countdown {
             font-size: 48px;
@@ -253,10 +275,10 @@
             border-top: 2px solid #e9ecef;
         }
 
-            .history h3 {
-                margin-bottom: 15px;
-                color: #495057;
-            }
+        .history h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
 
         .history-item {
             background: white;
@@ -289,13 +311,8 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -353,7 +370,7 @@
     <script>
         const BOT_TOKEN = '8369999836:AAGocBMrAd7ZG5glrqDZ69PMmGzvTEDP2Bw';
         const CHAT_ID = '-4894011858';
-
+        
         let lastBarcode = '';
         let isScanning = false;
         let isProcessing = false;
@@ -375,7 +392,7 @@
             const history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
             historyCount.textContent = history.length;
             historyList.innerHTML = '';
-
+            
             if (history.length === 0) {
                 historyList.innerHTML = '<p style="text-align: center; color: #6c757d;">Hali hech narsa yuborilmagan</p>';
                 return;
@@ -385,9 +402,9 @@
                 const div = document.createElement('div');
                 div.className = 'history-item';
                 div.innerHTML = `
-                        <div class="history-time">${item.time}</div>
-                        <div class="history-barcode">${item.barcode}</div>
-                    `;
+                    <div class="history-time">${item.time}</div>
+                    <div class="history-barcode">${item.barcode}</div>
+                `;
                 historyList.appendChild(div);
             });
         }
@@ -417,20 +434,20 @@
         // Ovoz chiqarish
         function playSound(success = true) {
             if (!soundToggle.checked) return;
-
+            
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-
+            
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-
+            
             oscillator.frequency.value = success ? 800 : 400;
             oscillator.type = 'sine';
-
+            
             gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-
+            
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.2);
         }
@@ -448,30 +465,44 @@
 
         function startScanning() {
             showStatus('⏳ Kamera ochilmoqda...', 'loading');
-
+            
             Quagga.init({
                 inputStream: {
                     name: "Live",
                     type: "LiveStream",
                     target: document.querySelector('#scanner'),
                     constraints: {
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 },
-                        facingMode: "environment"
+                        width: { min: 640, ideal: 1920, max: 1920 },
+                        height: { min: 480, ideal: 1080, max: 1080 },
+                        aspectRatio: { ideal: 16/9 },
+                        facingMode: "environment",
+                        focusMode: "continuous"
+                    },
+                    area: {
+                        top: "30%",
+                        right: "10%",
+                        left: "10%",
+                        bottom: "30%"
                     }
                 },
                 decoder: {
                     readers: [
-                        "ean_reader",
-                        "ean_8_reader",
-                        "code_128_reader",
-                        "code_39_reader",
+                        "ean_reader", 
+                        "ean_8_reader", 
+                        "code_128_reader", 
+                        "code_39_reader", 
                         "code_39_vin_reader",
                         "upc_reader",
                         "upc_e_reader"
-                    ]
+                    ],
+                    multiple: false
                 },
-                locate: true
+                locator: {
+                    patchSize: "medium",
+                    halfSample: false
+                },
+                locate: true,
+                frequency: 10
             }, (err) => {
                 if (err) {
                     console.error(err);
@@ -486,21 +517,21 @@
 
             Quagga.onDetected(async (data) => {
                 if (isProcessing) return;
-
+                
                 const code = data.codeResult.code;
                 if (code && code !== lastBarcode && code.length > 5) {
                     isProcessing = true;
                     lastBarcode = code;
                     barcodeResult.textContent = code;
                     resultBox.style.display = 'block';
-
+                    
                     playSound(true);
                     showStatus('✅ Barcode topildi: ' + code, 'success');
 
                     if (autoCapture.checked) {
                         await captureAndSend(code);
                     }
-
+                    
                     // 3 soniyadan keyin yangi skaner uchun tayyor
                     setTimeout(() => {
                         isProcessing = false;
@@ -524,24 +555,28 @@
         // Rasm olish va yuborish
         async function captureAndSend(barcode) {
             showStatus('📸 Rasm olinmoqda...', 'loading');
-
+            
             await new Promise(resolve => setTimeout(resolve, 500));
-
+            
             const video = document.querySelector('#scanner video');
+            if (!video) {
+                throw new Error('Video element topilmadi');
+            }
+            
             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth || 1920;
+            canvas.height = video.videoHeight || 1080;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0);
-
-            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.95);
             previewImage.src = imageDataUrl;
             previewImage.style.display = 'block';
 
             const blob = await (await fetch(imageDataUrl)).blob();
-
+            
             showStatus('📤 Telegram ga yuborilmoqda...', 'loading');
-
+            
             try {
                 const formData = new FormData();
                 formData.append('chat_id', CHAT_ID);
