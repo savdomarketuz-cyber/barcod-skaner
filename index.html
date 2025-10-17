@@ -187,6 +187,8 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
+            z-index: 10;
         }
 
         .btn-primary {
@@ -197,6 +199,10 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
         }
 
         .btn:disabled {
@@ -371,8 +377,6 @@
         const BOT_TOKEN = '8369999836:AAGocBMrAd7ZG5glrqDZ69PMmGzvTEDP2Bw';
         const CHAT_ID = '-4894011858';
         const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwwWtWBJLcn-rPsgdJXjyYUq7nXhW39mMg3B60n_CKnlFTWiY4yHRmuNbQYEenqDPnr/exec';
-        const SHEETS_ID = '1fDMC33GH-UYcaXnKVZ7U73JhNGrvb5K3UGBKg07ljOQ';
-        const SHEETS_URL = `https://script.google.com/macros/s/AKfycbzYOUR_SCRIPT_ID/exec`; // Bu yerga Apps Script URL kerak
         
         let lastBarcode = '';
         let isScanning = false;
@@ -389,6 +393,8 @@
         const autoCapture = document.getElementById('autoCapture');
         const soundToggle = document.getElementById('soundToggle');
         const countdown = document.getElementById('countdown');
+
+        console.log('Script yuklandi');
 
         // Tarixni yuklash
         function loadHistory() {
@@ -438,25 +444,32 @@
         function playSound(success = true) {
             if (!soundToggle.checked) return;
             
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = success ? 800 : 400;
-            oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.2);
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = success ? 800 : 400;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                console.log('Ovoz chiqarib bo\'lmadi:', e);
+            }
         }
 
         // Skaner boshlash
-        startBtn.addEventListener('click', () => {
+        startBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Tugma bosildi! isScanning:', isScanning);
+            
             if (isScanning) {
                 stopScanning();
                 startBtn.textContent = '🎥 Boshlash';
@@ -467,6 +480,7 @@
         });
 
         function startScanning() {
+            console.log('Skaner boshlanmoqda...');
             showStatus('⏳ Kamera ochilmoqda...', 'loading');
             
             Quagga.init({
@@ -508,11 +522,12 @@
                 frequency: 10
             }, (err) => {
                 if (err) {
-                    console.error(err);
+                    console.error('Kamera xatosi:', err);
                     showStatus('❌ Kamera ochilmadi! HTTPS kerak yoki brauzerda ruxsat yoqing', 'error');
                     startBtn.textContent = '🎥 Boshlash';
                     return;
                 }
+                console.log('Kamera ochildi!');
                 Quagga.start();
                 isScanning = true;
                 showStatus('✅ Barcode ni kameraga ko\'rsating', 'success');
@@ -522,6 +537,8 @@
                 if (isProcessing) return;
                 
                 const code = data.codeResult.code;
+                console.log('Barcode topildi:', code);
+                
                 if (code && code !== lastBarcode && code.length > 5) {
                     isProcessing = true;
                     lastBarcode = code;
@@ -547,6 +564,7 @@
         }
 
         function stopScanning() {
+            console.log('Skaner to\'xtatilmoqda...');
             if (isScanning) {
                 Quagga.stop();
                 isScanning = false;
@@ -583,15 +601,14 @@
             
             try {
                 // 1. Telegram ga yuborish
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('photo', blob, 'photo.jpg');
+                formData.append('caption', `📦 Barcode: ${barcode}\n⏰ ${new Date().toLocaleString('uz-UZ')}`);
+
                 const telegramPromise = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
                     method: 'POST',
-                    body: (() => {
-                        const formData = new FormData();
-                        formData.append('chat_id', CHAT_ID);
-                        formData.append('photo', blob, 'photo.jpg');
-                        formData.append('caption', `📦 Barcode: ${barcode}\n⏰ ${new Date().toLocaleString('uz-UZ')}`);
-                        return formData;
-                    })()
+                    body: formData
                 });
 
                 // 2. Google Sheets ga yuborish
@@ -611,7 +628,7 @@
                     throw new Error('Telegram yuborishda xatolik');
                 }
             } catch (error) {
-                console.error(error);
+                console.error('Yuborish xatosi:', error);
                 showStatus('❌ Yuborishda xatolik: ' + error.message, 'error');
                 playSound(false);
             }
@@ -619,6 +636,7 @@
 
         // Sahifa yuklanganda
         loadHistory();
+        console.log('Dastur tayyor!');
 
         // Sahifa yopilganda kamerani to'xtatish
         window.addEventListener('beforeunload', stopScanning);
