@@ -370,6 +370,9 @@
     <script>
         const BOT_TOKEN = '8369999836:AAGocBMrAd7ZG5glrqDZ69PMmGzvTEDP2Bw';
         const CHAT_ID = '-4894011858';
+        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwwWtWBJLcn-rPsgdJXjyYUq7nXhW39mMg3B60n_CKnlFTWiY4yHRmuNbQYEenqDPnr/exec';
+        const SHEETS_ID = '1fDMC33GH-UYcaXnKVZ7U73JhNGrvb5K3UGBKg07ljOQ';
+        const SHEETS_URL = `https://script.google.com/macros/s/AKfycbzYOUR_SCRIPT_ID/exec`; // Bu yerga Apps Script URL kerak
         
         let lastBarcode = '';
         let isScanning = false;
@@ -575,25 +578,37 @@
 
             const blob = await (await fetch(imageDataUrl)).blob();
             
-            showStatus('📤 Telegram ga yuborilmoqda...', 'loading');
+            // Parallel yuborish: Telegram va Google Sheets
+            showStatus('📤 Yuborilmoqda...', 'loading');
             
             try {
-                const formData = new FormData();
-                formData.append('chat_id', CHAT_ID);
-                formData.append('photo', blob, 'photo.jpg');
-                formData.append('caption', `📦 Barcode: ${barcode}\n⏰ ${new Date().toLocaleString('uz-UZ')}`);
-
-                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                // 1. Telegram ga yuborish
+                const telegramPromise = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
                     method: 'POST',
-                    body: formData
+                    body: (() => {
+                        const formData = new FormData();
+                        formData.append('chat_id', CHAT_ID);
+                        formData.append('photo', blob, 'photo.jpg');
+                        formData.append('caption', `📦 Barcode: ${barcode}\n⏰ ${new Date().toLocaleString('uz-UZ')}`);
+                        return formData;
+                    })()
                 });
 
-                if (response.ok) {
-                    showStatus('✅ Muvaffaqiyatli yuborildi!', 'success');
+                // 2. Google Sheets ga yuborish
+                const sheetsPromise = fetch(`${SHEETS_URL}?barcode=${encodeURIComponent(barcode)}`, {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+
+                // Ikkalasini parallel bajaring
+                const [telegramResponse] = await Promise.all([telegramPromise, sheetsPromise]);
+
+                if (telegramResponse.ok) {
+                    showStatus('✅ Telegram ✓ | Google Sheets ✓', 'success');
                     addToHistory(barcode);
                     playSound(true);
                 } else {
-                    throw new Error('Yuborishda xatolik');
+                    throw new Error('Telegram yuborishda xatolik');
                 }
             } catch (error) {
                 console.error(error);
