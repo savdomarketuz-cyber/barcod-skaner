@@ -489,22 +489,9 @@
                     type: "LiveStream",
                     target: document.querySelector('#scanner'),
                     constraints: {
-                        width: { min: 1280, ideal: 1920, max: 4096 },
-                        height: { min: 720, ideal: 1080, max: 2160 },
-                        aspectRatio: { ideal: 16/9 },
-                        facingMode: "environment",
-                        focusMode: "continuous",
-                        advanced: [
-                            { zoom: 2.0 },
-                            { exposureMode: "continuous" },
-                            { whiteBalanceMode: "continuous" }
-                        ]
-                    },
-                    area: {
-                        top: "20%",
-                        right: "5%",
-                        left: "5%",
-                        bottom: "20%"
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        facingMode: "environment"
                     }
                 },
                 decoder: {
@@ -513,26 +500,15 @@
                         "ean_8_reader", 
                         "code_128_reader", 
                         "code_39_reader", 
-                        "code_39_vin_reader",
-                        "upc_reader",
-                        "upc_e_reader",
-                        "codabar_reader",
-                        "i2of5_reader"
-                    ],
-                    multiple: false,
-                    debug: {
-                        drawBoundingBox: true,
-                        showFrequency: true,
-                        drawScanline: true,
-                        showPattern: true
-                    }
+                        "upc_reader"
+                    ]
                 },
                 locator: {
-                    patchSize: "x-large",
-                    halfSample: false
+                    patchSize: "medium",
+                    halfSample: true
                 },
-                numOfWorkers: 4,
-                frequency: 20,
+                numOfWorkers: 2,
+                frequency: 10,
                 locate: true
             }, (err) => {
                 if (err) {
@@ -551,28 +527,33 @@
                 if (isProcessing) return;
                 
                 const code = data.codeResult.code;
-                console.log('Barcode topildi:', code);
                 
-                if (code && code !== lastBarcode && code.length > 5) {
-                    isProcessing = true;
-                    lastBarcode = code;
-                    barcodeResult.textContent = code;
-                    resultBox.style.display = 'block';
-                    
-                    playSound(true);
-                    showStatus('✅ Barcode topildi: ' + code, 'success');
+                // Minimal validatsiya - tez ishlash uchun
+                if (code && code.length >= 8) {
+                    // Ikki marta tasdiqlash - tez
+                    if (code === lastBarcode) {
+                        isProcessing = true;
+                        barcodeResult.textContent = code;
+                        resultBox.style.display = 'block';
+                        
+                        playSound(true);
+                        showStatus('✅ Barcode: ' + code, 'success');
 
-                    if (autoCapture.checked) {
-                        await captureAndSend(code);
+                        if (autoCapture.checked) {
+                            await captureAndSend(code);
+                        }
+                        
+                        // Reset
+                        setTimeout(() => {
+                            isProcessing = false;
+                            lastBarcode = '';
+                            resultBox.style.display = 'none';
+                            previewImage.style.display = 'none';
+                        }, 2000);
+                    } else {
+                        lastBarcode = code;
+                        showStatus('🔍 Skaner: ' + code, 'loading');
                     }
-                    
-                    // 3 soniyadan keyin yangi skaner uchun tayyor
-                    setTimeout(() => {
-                        isProcessing = false;
-                        lastBarcode = '';
-                        resultBox.style.display = 'none';
-                        previewImage.style.display = 'none';
-                    }, 3000);
                 }
             });
         }
