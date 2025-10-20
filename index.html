@@ -327,6 +327,7 @@
         <div class="header">
             <h1>📦 Yandex Market Scanner</h1>
             <p>Barcode avtomatik skanerlash va yuborish</p>
+            <div style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 12px; font-size: 11px;">v2.1.0</div>
         </div>
 
         <div class="settings">
@@ -580,19 +581,14 @@
             }
             
             const canvas = document.createElement('canvas');
-            // Maksimal rezolyutsiya
+            // Yuqori sifat, lekin tez
             canvas.width = video.videoWidth || 1920;
             canvas.height = video.videoHeight || 1080;
             const ctx = canvas.getContext('2d');
-            
-            // High quality rendering
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // Yuqori sifatli JPEG (98%)
-            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.98);
+            // 92% sifat - tez va sifatli balans
+            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.92);
             previewImage.src = imageDataUrl;
             previewImage.style.display = 'block';
 
